@@ -1,2 +1,2 @@
 # Weather-app
-Bengaluru Weather is a modern, responsive weather forecasting website designed to provide accurate and real-time weather information for Bengaluru, Karnataka, India. The application features a clean, user-friendly interface based on a Figma design, making weather information easy to access and understand.
+India Weather Dashboard is a responsive website that provides real-time weather updates, hourly forecasts, 7-day predictions, AQI, and an interactive map for cities across India. Built using HTML, CSS, JavaScript, and weather APIs, it helps users explore and compare weather conditions easily.
