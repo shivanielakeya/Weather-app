@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f9ff">
+  <meta name="description" content="Live weather, forecasts and air-quality estimates across India.">
+  <title>India Weather — Skycast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Skycast home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span>skycast<span class="brand-period">.</span></span>
+      </a>
+
+      <form class="search-form" id="search-form" role="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>
+        <label class="visually-hidden" for="location-search">Search a city</label>
+        <input id="location-search" type="search" placeholder="Search any place in India..." autocomplete="off">
+        <button class="search-button" type="submit">Search</button>
+        <div class="search-results" id="search-results" role="listbox" aria-label="Location suggestions" hidden></div>
+      </form>
+
+      <div class="top-actions">
+        <button class="unit-toggle" id="unit-toggle" type="button" aria-label="Switch temperature units">
+          <span class="unit-option active" data-unit="c">°C</span><span class="unit-divider">/</span><span class="unit-option" data-unit="f">°F</span>
+        </button>
+        <button class="icon-button favorite-button" id="favorite-button" type="button" aria-label="Add current city to favourites" title="Add to favourites">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"></path></svg>
+        </button>
+        <button class="icon-button menu-button" id="favorites-menu-button" type="button" aria-label="Show favourite locations" title="Favourites">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+      </div>
+      <div class="favorites-popover" id="favorites-popover" hidden></div>
+    </header>
+
+    <main>
+      <section class="intro-row">
+        <div>
+          <p class="eyebrow"><span class="live-dot"></span> LIVE WEATHER</p>
+          <h1>Your weather, <span>at a glance.</span></h1>
+          <p class="intro-copy">A little sunshine for your day, wherever you are.</p>
+        </div>
+        <div class="location-stamp">
+          <span class="location-pin" aria-hidden="true">⌖</span>
+          <div><strong id="location-name">Bengaluru</strong><span id="location-region">Karnataka, India</span></div>
+        </div>
+      </section>
+
+      <div class="status-message" id="status-message" role="status" aria-live="polite" hidden></div>
+      <div class="loading-state" id="loading-state" aria-live="polite">
+        <span class="loader"></span><span>Getting the latest weather…</span>
+      </div>
+
+      <div id="weather-content" hidden>
+        <section class="overview-grid" aria-label="Current weather and conditions">
+          <article class="current-card">
+            <div class="current-card-top">
+              <div>
+                <p class="card-kicker">RIGHT NOW <span class="current-time" id="current-time">—</span></p>
+                <p class="current-condition" id="current-condition">—</p>
+              </div>
+              <span class="weather-art" id="current-icon" aria-hidden="true">☀️</span>
+            </div>
+            <div class="temperature-line">
+              <span class="current-temperature" id="current-temperature">—</span><span class="temperature-unit" id="current-unit">°C</span>
+            </div>
+            <p class="feels-like">Feels like <strong id="feels-like">—</strong></p>
+            <div class="high-low">
+              <span><span aria-hidden="true">↗</span> H:<strong id="today-high">—</strong></span>
+              <span><span aria-hidden="true">↘</span> L:<strong id="today-low">—</strong></span>
+            </div>
+            <div class="current-card-foot"><span class="sun-symbol" aria-hidden="true">☼</span><span id="daylight-summary">A good day to get outside</span></div>
+          </article>
+
+          <div class="metrics-grid">
+            <article class="metric-card">
+              <div class="metric-heading"><span class="metric-icon humidity-icon">◉</span><span>Humidity</span></div>
+              <strong class="metric-value" id="humidity">—</strong>
+              <span class="metric-note" id="humidity-note">Relative humidity</span>
+              <div class="meter"><span id="humidity-meter"></span></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-heading"><span class="metric-icon wind-icon">↝</span><span>Wind</span></div>
+              <strong class="metric-value"><span id="wind-speed">—</span><small> km/h</small></strong>
+              <span class="metric-note" id="wind-note">—</span>
+              <div class="wind-visual" aria-hidden="true"><span></span><span></span><span></span></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-heading"><span class="metric-icon uv-icon">◒</span><span>UV index</span></div>
+              <strong class="metric-value" id="uv-index">—</strong>
+              <span class="metric-note" id="uv-note">—</span>
+              <div class="meter uv-meter"><span id="uv-meter"></span></div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-heading"><span class="metric-icon cloud-icon">☁</span><span>Cloud cover</span></div>
+              <strong class="metric-value" id="cloud-cover">—</strong>
+              <span class="metric-note">of the sky</span>
+              <div class="meter cloud-meter"><span id="cloud-meter"></span></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-card hourly-section">
+          <div class="section-heading">
+            <div><p class="section-kicker">PLAN YOUR DAY</p><h2>Today’s forecast</h2></div>
+            <span class="updated-label"><span class="refresh-dot"></span> Updated <time id="last-updated">—</time></span>
+          </div>
+          <div class="chart-key"><span class="key-temp"></span> Temperature <span class="key-rain"></span> Rain chance</div>
+          <div class="chart-wrap"><canvas id="hourly-chart" aria-label="Hourly temperature and rain probability for the next 24 hours" role="img"></canvas></div>
+          <div class="hourly-strip" id="hourly-strip" aria-label="Hourly forecast details"></div>
+        </section>
+
+        <section class="section-card weekly-section">
+          <div class="section-heading">
+            <div><p class="section-kicker">LOOKING AHEAD</p><h2>7-day forecast</h2></div>
+            <span class="subtle-label">Next week</span>
+          </div>
+          <div class="daily-list" id="daily-list"></div>
+        </section>
+
+        <section class="lower-grid">
+          <article class="section-card sun-card">
+            <div class="section-heading compact-heading">
+              <div><p class="section-kicker">DAYLIGHT</p><h2>Sunrise &amp; sunset</h2></div>
+              <span class="sun-card-icon" aria-hidden="true">🌤️</span>
+            </div>
+            <div class="sun-times">
+              <div><span class="sun-time-icon sunrise-icon" aria-hidden="true">↗</span><span class="sun-time-label">Sunrise</span><strong id="sunrise">—</strong></div>
+              <div><span class="sun-time-icon sunset-icon" aria-hidden="true">↘</span><span class="sun-time-label">Sunset</span><strong id="sunset">—</strong></div>
+            </div>
+            <div class="sun-track" aria-hidden="true"><span class="sun-track-fill" id="sun-track-fill"></span><span class="sun-position" id="sun-position">☀</span></div>
+            <div class="sun-track-labels"><span>Sunrise</span><span>Sunset</span></div>
+          </article>
+          <article class="section-card air-card">
+            <div class="section-heading compact-heading">
+              <div><p class="section-kicker">BREATHE EASY</p><h2>Air quality</h2></div>
+              <span class="air-icon" aria-hidden="true">✳</span>
+            </div>
+            <div class="air-main">
+              <div class="aqi-badge" id="aqi-badge"><strong id="aqi-value">—</strong><span>AQI</span></div>
+              <div><strong class="air-category" id="aqi-category">Loading estimate</strong><span class="air-description" id="aqi-description">Modelled air-quality estimate</span></div>
+            </div>
+            <div class="aqi-scale" aria-label="US AQI scale: Good 0 to 50, Moderate 51 to 100, Unhealthy for sensitive groups 101 to 150, Unhealthy 151 to 200, Very unhealthy 201 to 300, Hazardous 301 to 500">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <div class="aqi-labels"><span>Good</span><span>Moderate</span><span>Poor</span></div>
+            <p class="air-footnote" id="air-footnote">Estimated from forecast models; not a local sensor reading.</p>
+          </article>
+        </section>
+
+        <section class="localities-section">
+          <div class="section-heading">
+            <div><p class="section-kicker">WEATHER AROUND BENGALURU</p><h2>Locality outlook</h2><p class="localities-subtitle">A closer look at conditions across the city</p></div>
+            <span class="subtle-label">Live forecast</span>
+          </div>
+          <div class="locality-grid" id="locality-grid">
+            <div class="locality-placeholder"><span class="loader"></span> Loading Bengaluru localities…</div>
+          </div>
+        </section>
+
+        <section class="section-card radar-section">
+          <div class="section-heading radar-heading">
+            <div><p class="section-kicker">INDIA AT A GLANCE</p><h2>India weather map</h2><p class="localities-subtitle">Select a city marker to view its forecast · OpenStreetMap</p></div>
+            <span class="map-live"><span class="live-dot"></span> LIVE CITY DATA</span>
+          </div>
+          <div id="weather-map" role="region" aria-label="Interactive weather map of India with selectable city markers"></div>
+          <div class="map-caption"><span>Weather values are forecasts, not radar · Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a></span><span id="map-location-label">India · select a city marker</span></div>
+        </section>
+
+        <section class="india-section">
+          <div class="section-heading india-heading">
+            <div><p class="section-kicker">ACROSS THE COUNTRY</p><h2>India weather overview</h2><p class="localities-subtitle">Forecast conditions in major cities</p></div>
+            <label class="filter-label" for="region-filter">Browse region
+              <select id="region-filter" aria-label="Filter major cities by region">
+                <option value="all">All India</option><option value="North">North</option><option value="South">South</option>
+                <option value="East">East</option><option value="West">West</option><option value="Central">Central</option><option value="Northeast">Northeast</option>
+              </select>
+            </label>
+          </div>
+          <div class="india-highlights" id="india-highlights">
+            <div class="insight-loading"><span class="loader"></span> Loading city forecasts…</div>
+          </div>
+          <div class="city-grid" id="major-city-grid"></div>
+        </section>
+
+        <section class="section-card comparison-section">
+          <div class="section-heading">
+            <div><p class="section-kicker">SIDE BY SIDE</p><h2>Compare cities</h2><p class="localities-subtitle">Choose 2 to 4 cities to compare current conditions</p></div>
+            <span class="subtle-label" id="comparison-count">0 selected</span>
+          </div>
+          <div class="compare-picker" id="compare-picker" aria-label="Select cities to compare"></div>
+          <div class="comparison-message" id="comparison-message" aria-live="polite">Select at least two cities.</div>
+          <div class="comparison-table-wrap" id="comparison-table-wrap" hidden></div>
+        </section>
+
+        <section class="lower-grid alerts-grid">
+          <article class="section-card insights-card">
+            <div class="section-heading compact-heading">
+              <div><p class="section-kicker">MODEL-BASED OUTLOOK</p><h2>Weather insights</h2></div>
+              <span class="insight-icon" aria-hidden="true">✦</span>
+            </div>
+            <p class="insight-disclaimer">Forecast-based guidance, not an official warning.</p>
+            <div class="generated-alerts" id="generated-alerts"></div>
+            <div class="rainfall-summary" id="rainfall-summary"></div>
+            <div class="activity-tip" id="activity-tip"></div>
+          </article>
+          <article class="section-card imd-card">
+            <div class="section-heading compact-heading">
+              <div><p class="section-kicker">OFFICIAL ADVISORIES</p><h2>IMD warnings</h2></div>
+              <span class="imd-mark">IMD</span>
+            </div>
+            <p class="imd-message">Official, location-specific warning data could not be reliably accessed from a public feed for this static app. No official warnings are fabricated or inferred here.</p>
+            <a class="imd-link" href="https://mausam.imd.gov.in/" target="_blank" rel="noreferrer">Check India Meteorological Department advisories <span aria-hidden="true">↗</span></a>
+            <span class="imd-attribution">Source: India Meteorological Department (IMD)</span>
+          </article>
+        </section>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <span class="footer-brand">skycast<span class="brand-period">.</span></span>
+      <span>Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open-Meteo</a> · Air-quality estimates by CAMS ENSEMBLE</span>
+      <span id="footer-date">Asia/Kolkata</span>
+    </footer>
+  </div>
+</body>
+</html>
