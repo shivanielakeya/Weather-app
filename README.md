@@ -56,7 +56,3 @@ The app is static and needs no build command. On **GitHub Pages**, push the file
 - IMD warnings are not integrated as a feed; use the official IMD link for verified alerts.
 - Air quality is modelled and may not match nearby monitoring stations.
 - Chart.js, Leaflet and fonts are CDN-hosted; an unavailable CDN may disable the chart or map.
-
-## Short class presentation script
-
-> “Skycast helps users scan weather across India and compare conditions between places. It is built using HTML, CSS and vanilla JavaScript, with Open-Meteo for forecasts and India-filtered geocoding, Chart.js for hourly trends, and Leaflet with OpenStreetMap for the map. Users can search Indian cities and localities, browse regional forecasts, compare two to four cities, save favourites, view rainfall and weather insights, and switch between Celsius and Fahrenheit. The rain, heat and outdoor tips are forecast-based guidance, not official warnings; since a reliable public IMD warning feed could not be verified for this static app, the dashboard links to the official IMD portal. Future work could add a verified warning integration, broader district coverage, and richer multilingual support.”
